@@ -19,40 +19,86 @@ static int which_led(char n_led);
 static void led_percentage(size_t sz, uint8_t num[]);
 
 char in_led[3];
-uint8_t duty_cycle[2];
+char duty_cycle_str[3*sizeof(char) + 1] = "100";
+uint32_t pulse_width;
 
+int str_to_int(char* str)
+{
+    // Initialize result
+    int res = 0;
 
+    // Iterate through all characters
+    // of input string and update result
+    // take ASCII character of corosponding digit and
+    // subtract the code from '0' to get numerical
+    // value and multiply res by 10 to shuffle
+    // digits left to update running total
+    for (int i = 0; str[i] != '\0'; ++i)
+        res = res * 10 + str[i] - '0';
 
-uint8_t convert_digits_to_number(){
-	uint8_t number = 10*duty_cycle[1] + duty_cycle[0];
-	return number;
+    // return result.
+    return res;
 }
 
-uint32_t calculate_duty_cycle(uint32_t duty_cycle_percent){
+unsigned int strlength(char *p)
+{
+	unsigned int count = 0;
 
-	float fraction_percent = duty_cycle_percent/ ((float) 100);
+	while(*p!='\0')
+	{
+		count++;
+		p++;
+	}
 
-	return (fraction_percent * 200);
+	return count;
+}
+void print_message(char msg[]){
+	  HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlength(msg), 100);
 }
 
-uint32_t calculate_pulse_width(){
-	return calculate_duty_cycle(convert_digits_to_number(duty_cycle));
+//uint8_t convert_digits_to_number(){
+//	uint8_t number = 10*duty_cycle[1] + duty_cycle[0];
+//	return number;
+//}
+
+uint32_t calculate_pulse_width(uint8_t duty_percent){
+
+	float pulse_width = (duty_percent * 200) / ((float) 100);
+
+	return pulse_width;
 }
 
-int receive_duty_cycle(){
-	  HAL_UART_Receive(&huart2, duty_cycle, sizeof(duty_cycle), HAL_MAX_DELAY);
-
-	  if((duty_cycle[0] >='1' && duty_cycle[0] <='9' )&&
-			  (duty_cycle[1] >= '0' && duty_cycle[1] <= '9')){
-		  return 1;
-	  }
-	  else{
-		  return 0;
-	  }
+uint8_t get_duty_cycle_int(){
+	char *duty_cycle_str_l = &duty_cycle_str[0];
+	return str_to_int(duty_cycle_str_l);
 }
 
-void receive_led_input(){
-	  HAL_UART_Receive(&huart2, (uint8_t *) in_led, sizeof(char), HAL_MAX_DELAY);
+int receive_duty_cycle()
+{
+	char *duty_cycle_str_l = &duty_cycle_str[0];
+
+	HAL_UART_Receive(&huart2,(uint8_t *) duty_cycle_str_l,
+			strlength(duty_cycle_str_l), HAL_MAX_DELAY);
+
+	uint32_t led_power = get_duty_cycle_int();
+	if(led_power >= 0 && led_power <= 100){
+		pulse_width = calculate_pulse_width(led_power);
+		return 1;
+	}
+	else{
+		print_message("Invalid percentage has been entered. Try again:\r\n");
+		return 0;
+	}
+
+}
+
+uint8_t receive_led_input(){
+
+	if(HAL_UART_Receive(&huart2, (uint8_t *) in_led, sizeof(char), HAL_MAX_DELAY) == HAL_OK){
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 void print_duty_cycle_prompt(){
@@ -79,7 +125,7 @@ void carriage_newline_print(){
 }
 
 void led_percentage_print(){
-	led_percentage(sizeof(duty_cycle), duty_cycle);
+	led_percentage(strlength(duty_cycle_str), duty_cycle_str);
 }
 
 
@@ -95,8 +141,6 @@ static void led_percentage(size_t sz, uint8_t num[]){
 }
 
 void dim_chosen_led(){
-
-	uint32_t pulse_width = calculate_pulse_width();
 
 	if(chosen_led() == '2'){
 		adjust_tim1_pulse_width(pulse_width);

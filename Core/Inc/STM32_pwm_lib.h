@@ -54,7 +54,7 @@ void print_led_prompt();
 void print_duty_cycle_prompt();
 void complement_tim_pwm_start();
 void tim_pwm_start();
-void receive_led_input();
+uint8_t receive_led_input();
 int receive_duty_cycle();
 void adjust_tim2_pulse_width(uint32_t pulse_width);
 void adjust_tim1_pulse_width(uint32_t pulse_width);

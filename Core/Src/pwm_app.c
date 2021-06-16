@@ -31,9 +31,7 @@ void start_application(){
 
 	  print_led_prompt();
 
-	  receive_led_input();
-
-	  int step1_success = which_led_print();
+	  int step1_success = receive_led_input();
 
 	  if(step1_success){
 
