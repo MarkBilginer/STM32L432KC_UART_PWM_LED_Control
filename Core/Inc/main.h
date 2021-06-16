@@ -1,3 +1,10 @@
+/** @file main.h
+ *  @brief Import from application layer.
+ *
+ *  @author Mark Bilginer (GitHub: MarkBilginer)
+ *  @bug No known bugs.
+ */
+
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __MAIN_H
 #define __MAIN_H
@@ -6,7 +13,9 @@
 extern "C" {
 #endif
 
+/* -- Includes -- */
 
+/* -- Application abstraction layer -- */
 #include "pwm_app.h"
 
 

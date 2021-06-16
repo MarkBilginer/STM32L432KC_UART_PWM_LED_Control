@@ -1,26 +1,33 @@
-/*
- * STM32_pwm_lib.c
+/** @file STM32_pwm_lib.c
+ *  @brief Library layer function implementation for the STM32L4.
  *
- *  Created on: May 28, 2021
- *      Author: mark
+ *  This file contains the applications' library abstraction layer, wrapping
+ *  the driver layer functions which are vendor specific. Aims at making
+ *  the code more portable.
+ *
+ *  @author Mark Bilginer (GitHub: MarkBilginer)
+ *  @bug No known bugs.
  */
 
 
 #include "STM32_pwm_lib.h"
 
-static int which_led(char n_led);
-static void led_percentage(size_t sz, char num[]);
-
+/* Handler for TIM1*/
 TIM_HandleTypeDef htim1;
 
+/* Handler for TIM2*/
 TIM_HandleTypeDef htim2;
 
+/* Handler for TIM2*/
 UART_HandleTypeDef huart2;
 
+/* user LED input*/
 char in_led[3];
 
+/* duty cycle provided by user in string buffer form */
 char duty_cycle_str[3*sizeof(char) + 1] = "100";
 
+/* pulse width to modify timer modules' PWM output*/
 uint32_t pulse_width;
 
 
@@ -58,11 +65,6 @@ void print_message(char msg[])
 {
 	HAL_UART_Transmit(&huart2, (uint8_t *) msg, strlength(msg), 100);
 }
-
-//uint8_t convert_digits_to_number(){
-//	uint8_t number = 10*duty_cycle[1] + duty_cycle[0];
-//	return number;
-//}
 
 uint32_t calculate_pulse_width(uint8_t duty_percent)
 {
@@ -104,12 +106,26 @@ int receive_duty_cycle()
 
 }
 
+void print_led_choice()
+{
+	char select1[] = "You have selected";
+	print_message(select1);
+	if (in_led[0] == '1') {
+		print_message(": onboard LED.\r\n");
+	} else if (in_led[0] == '2') {
+		print_message(": external LED.\r\n");
+	} else{
+		print_message(" an invalid LED. Try again...\r\n");
+	}
+}
+
 uint8_t check_led_input()
 {
 	if (in_led[0] == '1' || in_led[0] == '2') {
+		print_led_choice();
 		return 1;
 	} else {
-		print_message("Invalid LED has been chosen. Try again...\r\n");
+		print_led_choice();
 		return 0;
 	}
 }
@@ -142,68 +158,24 @@ void carriage_newline_print()
 	HAL_UART_Transmit(&huart2, (uint8_t *) in_end, sizeof(in_end), 100);
 }
 
-void led_percentage_print()
+void print_led_percentage()
 {
-	led_percentage(strlength(duty_cycle_str), duty_cycle_str);
-}
-
-
-static void led_percentage(size_t sz, char num[])
-{
-	char select1[] = "Setting LED to ";
-	HAL_UART_Transmit(&huart2, (uint8_t *)select1, sizeof(select1), 10);
-
-	HAL_UART_Transmit(&huart2, (uint8_t*)num, sz, 100);
-
-	char select2[] = "% power...\r\n";
-	HAL_UART_Transmit(&huart2, (uint8_t *)select2, sizeof(select2), 1000);
+	print_message("Setting LED to ");
+	print_message(duty_cycle_str);
+	print_message("% power...\r\n");
 }
 
 void dim_chosen_led()
 {
-	if (chosen_led() == '2') {
+	if (in_led[0] == '2') {
 		adjust_tim1_pulse_width(pulse_width);
-	} else if (chosen_led() == '1') {
+	} else if (in_led[0] == '1') {
 		adjust_tim2_pulse_width(pulse_width);
 	} else {
 		//do_nothing
 	}
 }
 
-char chosen_led()
-{
-	return in_led[0];
-}
-
-int which_led_print()
-{
-	return which_led(in_led[0]);
-}
-
-static int which_led(char n_led)
-{
-	char select1[] = "You have selected ";
-
-	if (n_led == '1') {
-		HAL_UART_Transmit(&huart2, (uint8_t *)select1, sizeof(select1), 100);
-		char onboard_led[] = "onboard LED.\r\n";
-		HAL_UART_Transmit(&huart2, (uint8_t *)onboard_led, sizeof(onboard_led), 100);
-	} else if (n_led == '2') {
-		HAL_UART_Transmit(&huart2, (uint8_t *)select1, sizeof(select1), 100);
-		char external_led[] = "external LED.\r\n";
-		HAL_UART_Transmit(&huart2, (uint8_t *)external_led, sizeof(external_led), 100);
-	} else {
-		char invalid_num[] = "You have entered an invalid number. Try again...\r\n";
-		HAL_UART_Transmit(&huart2, (uint8_t *)invalid_num, sizeof(invalid_num), 100);
-		return 0;
-	}
-	return 1;
-}
-
-/**
-  * @brief System Clock Configuration
-  * @retval None
-  */
 void config_system_clock(void)
 {
 	RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -240,10 +212,10 @@ void config_system_clock(void)
 	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
 	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
 	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-
 	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK) {
 		Error_Handler();
 	}
+
 	PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2;
 	PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
 	if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
@@ -269,11 +241,6 @@ void adjust_tim2_pulse_width(uint32_t pulse_width)
 	htim2.Instance->CCR2 = pulse_width;
 }
 
-/**
-  * @brief TIM1 Initialization Function
-  * @param None
-  * @retval None
-  */
 void init_tim1(uint32_t prescaler, uint32_t period, uint32_t pulse)
 {
 	TIM_ClockConfigTypeDef sClockSourceConfig = {0};
@@ -332,11 +299,6 @@ void init_tim1(uint32_t prescaler, uint32_t period, uint32_t pulse)
 	HAL_TIM_MspPostInit(&htim1);
 }
 
-/**
-  * @brief TIM2 Initialization Function
-  * @param None
-  * @retval None
-  */
 void init_tim2(uint32_t prescaler, uint32_t period, uint32_t pulse)
 {
 	TIM_ClockConfigTypeDef sClockSourceConfig = {0};
@@ -374,11 +336,6 @@ void init_tim2(uint32_t prescaler, uint32_t period, uint32_t pulse)
 	HAL_TIM_MspPostInit(&htim2);
 }
 
-/**
-  * @brief USART2 Initialization Function
-  * @param None
-  * @retval None
-  */
 void init_usart2_uart(uint32_t baudrate)
 {
 	huart2.Instance = USART2;
@@ -396,11 +353,6 @@ void init_usart2_uart(uint32_t baudrate)
 	}
 }
 
-/**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
 void init_gpio(void)
 {
 	/* GPIO Ports Clock Enable */
@@ -424,10 +376,6 @@ void init_hal()
 	HAL_Init();
 }
 
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
 void Error_Handler(void)
 {
 	/* User can add his own implementation to report the HAL error return state */

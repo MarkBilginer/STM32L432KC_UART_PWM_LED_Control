@@ -1,11 +1,25 @@
-/* Includes ------------------------------------------------------------------*/
+/** @file main.c
+ *  @brief Application run is contained in this file.
+ *
+ *  This file contains the applications' main() function.
+ *
+ *  This is the entry point for the application.
+ *  Application name is STM32_UART_PWM_LED_Control.
+ *  What the Application does? Lets user choose
+ *  between on-board and external LED. Then asks
+ *  the user the brightness of the LED.
+ *
+ *  @author Mark Bilginer (GitHub: MarkBilginer)
+ *  @bug no known bugs.
+ */
+
+/* -- Includes -- */
 #include "pwm_app.h"
 
 
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
+/** @brief The application entry point.
+  * @return Should not return.
+*/
 int main(void)
 {
 	setup_micro();

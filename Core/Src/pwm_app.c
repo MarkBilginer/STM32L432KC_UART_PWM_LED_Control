@@ -1,13 +1,15 @@
-/*
- * pwm_app.c
+/** @file pwm_app.c
+ *  @brief Application layer helper and wrapper functions implementation.
  *
- *  Created on: 28 May 2021
- *      Author: mark
+ *  Aims to make the code more readable. Application layer,
+ *  library layer and driver layer concept was in mind.
+ *
+ *  @author Mark Bilginer (GitHub: MarkBilginer)
+ *  @bug No known bugs.
  */
 
-
+/* -- Includes -- */
 #include "pwm_app.h"
-
 
 void setup_micro()
 {
@@ -19,13 +21,11 @@ void setup_micro()
 	init_tim2(999, 199, 100);
 }
 
-
 void start_pwm()
 {
 	complement_tim_pwm_start();
 	tim_pwm_start();
 }
-
 
 void start_application()
 {
@@ -40,7 +40,7 @@ void start_application()
 		int step2_success = receive_duty_cycle();
 
 		if (step2_success) {
-			led_percentage_print();
+			print_led_percentage();
 			dim_chosen_led();
 		}
 
