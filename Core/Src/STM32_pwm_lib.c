@@ -73,6 +73,15 @@ uint8_t get_duty_cycle_int(){
 	return str_to_int(duty_cycle_str_l);
 }
 
+void print_duty_cycle_prompt(){
+	print_message("Please enter LED power in %.\r\n");
+	print_message("The format is as follows:\r\n");
+	print_message("		001		-		1%\r\n");
+	print_message("		010		-		10%\r\n");
+	print_message("		100		-		100%\r\n");
+	print_message("Enter: \r\n\r\n");
+}
+
 int receive_duty_cycle()
 {
 	char *duty_cycle_str_l = &duty_cycle_str[0];
@@ -92,18 +101,22 @@ int receive_duty_cycle()
 
 }
 
-uint8_t receive_led_input(){
-
-	if(HAL_UART_Receive(&huart2, (uint8_t *) in_led, sizeof(char), HAL_MAX_DELAY) == HAL_OK){
+uint8_t check_led_input(){
+	if(in_led[0] == '1' || in_led[0] == '2'){
 		return 1;
 	} else {
+		print_message("Invalid LED has been chosen. Try again...\r\n");
 		return 0;
 	}
 }
 
-void print_duty_cycle_prompt(){
-	  char request_duty[] = "Please Enter % value (10-99):\r\n";
-	  HAL_UART_Transmit(&huart2, (uint8_t *) request_duty, sizeof(request_duty), 100);
+uint8_t receive_led_input(){
+
+	if(HAL_UART_Receive(&huart2, (uint8_t *) in_led, sizeof(char), HAL_MAX_DELAY) == HAL_OK){
+		return check_led_input();
+	} else {
+		return 0;
+	}
 }
 
 void print_led_prompt(){
