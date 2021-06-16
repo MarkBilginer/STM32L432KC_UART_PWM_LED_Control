@@ -10,13 +10,10 @@ int main(void)
 {
 	setup_micro();
 	start_pwm();
-  while (1)
-  {
 
-	  start_application();
-
-  }
-
+	while (1) {
+		start_application();
+	}
 }
 
 

@@ -9,42 +9,41 @@
 #include "pwm_app.h"
 
 
-void setup_micro(){
+void setup_micro()
+{
 	init_hal();
 	config_system_clock();
-	  init_gpio();
-	  init_usart2_uart(115200);
-	  init_tim1(999, 199, 100);
-	  init_tim2(999, 199, 100);
+	init_gpio();
+	init_usart2_uart(115200);
+	init_tim1(999, 199, 100);
+	init_tim2(999, 199, 100);
 }
 
 
-void start_pwm(){
-	  complement_tim_pwm_start();
-	  tim_pwm_start();
+void start_pwm()
+{
+	complement_tim_pwm_start();
+	tim_pwm_start();
 }
 
 
-void start_application(){
+void start_application()
+{
+	credential_print();
 
-	  credential_print();
+	print_led_prompt();
+	int step1_success = receive_led_input();
 
-	  print_led_prompt();
+	if (step1_success) {
 
-	  int step1_success = receive_led_input();
+		print_duty_cycle_prompt();
+		int step2_success = receive_duty_cycle();
 
-	  if(step1_success){
+		if (step2_success) {
+			led_percentage_print();
+			dim_chosen_led();
+		}
 
-		  print_duty_cycle_prompt();
-
-		  int step2_success = receive_duty_cycle();
-
-		  if(step2_success){
-			  led_percentage_print();
-
-			  dim_chosen_led();
-		  }
-
-	  }
+	}
 
 }
