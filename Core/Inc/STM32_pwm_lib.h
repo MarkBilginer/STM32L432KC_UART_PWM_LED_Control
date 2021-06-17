@@ -16,10 +16,11 @@
 extern "C" {
 #endif
 
-/* Includes ------------------------------------------------------------------*/
+/* -- Includes -- */
+/* -- Hardware abstraction layer -- */
 #include "stm32l4xx_hal.h"
 
-/* Exported functions prototypes ---------------------------------------------*/
+/* -- Exported functions prototypes -- */
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 /** @brief Converts string to a number.

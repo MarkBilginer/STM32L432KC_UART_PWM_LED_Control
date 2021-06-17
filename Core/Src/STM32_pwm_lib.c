@@ -9,7 +9,6 @@
  *  @bug No known bugs.
  */
 
-
 #include "STM32_pwm_lib.h"
 
 /* Handler for TIM1*/

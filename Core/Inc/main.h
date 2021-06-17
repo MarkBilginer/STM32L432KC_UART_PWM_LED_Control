@@ -5,7 +5,7 @@
  *  @bug No known bugs.
  */
 
-/* Define to prevent recursive inclusion -------------------------------------*/
+/* -- Define to prevent recursive inclusion -- */
 #ifndef __MAIN_H
 #define __MAIN_H
 
